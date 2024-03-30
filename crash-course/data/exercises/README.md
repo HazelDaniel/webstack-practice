@@ -1,0 +1,3 @@
+> What does this one do?
+
+EXERCISES ON POSTGRES CRASH COURSE

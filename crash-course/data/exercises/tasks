@@ -1,0 +1,7 @@
+1. show a list of men working at google and group them by the country they are from. columns: email , gender, country_of_birth, count
+2. show a list of people working at google and group them by the country they are from
+3. get the number of men working at google and are in the same country
+4. get the number of women working at google and are in the same country
+5. get the number of people working at google and are in the same country
+6. show a country with the most people working at google 
+7. show a list of the most gender born in the UK
