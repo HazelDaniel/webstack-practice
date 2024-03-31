@@ -6,7 +6,7 @@
 5. get the number of people working at google and are in the same country
 6. show a country with the most people working at google 
 7. show a list of the most gender born in the UK
---- day 1
+-- day 1
 -.create another table (or relation) called cars. and provide the following fields:
 	make
 	model
@@ -20,3 +20,7 @@
 13. get the two most sold car models
 14. get the sum of all car prices sold each year
 15. get the average price of a Ford car
+TODO:
+16. make sure that no two persons can have the same email
+17. insert first_name, gender and country_of_birth into a person row with an existing email, and it must not fail
+18. do not allow inserting a car that is more than 50 years old
