@@ -1,3 +1,4 @@
+-- day 0
 1. show a list of men working at google and group them by the country they are from. columns: email , gender, country_of_birth, count
 2. show a list of people working at google and group them by the country they are from
 3. get the number of men working at google and are in the same country
@@ -5,3 +6,17 @@
 5. get the number of people working at google and are in the same country
 6. show a country with the most people working at google 
 7. show a list of the most gender born in the UK
+--- day 1
+-.create another table (or relation) called cars. and provide the following fields:
+	make
+	model
+	price
+	year
+8. add an age column as an alias to a function to calculate the age of all cars, display both make and age
+9. add a discount column as an alias to a function to calculate a 20% discount on all cars. display make, price and discount
+10. get the 2 most expensive cars sold in 2000
+11. get the cars with 20% discount less than $3000000 display the make price and discount
+12. get the cars younger than 45 years. display the make and the age
+13. get the two most sold car models
+14. get the sum of all car prices sold each year
+15. get the average price of a Ford car
