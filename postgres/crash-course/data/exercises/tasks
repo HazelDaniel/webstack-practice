@@ -23,4 +23,14 @@
 16. make sure that no two persons can have the same email
 17. insert first_name, gender and country_of_birth into a person row with an existing email, and it must not fail
 18. do not allow inserting a car that is more than 50 years old
+-- day 2
+-.
+19. create a one-to-one relationship between the two tables: person, cars
++20. change the primary keys to a UUID4 generated identifier on both tables
+	. using loops and functions, make sure that each row in the person table references a car correctly (if any)
+	. in the cars table and that all cars have an owner_id
 TODO:
+21. for every person on the person table, get the person's first name + their car details. anyone that doesn't have a car should have the car fields as null
+22. for every car on the cars table, get the car make and price + their owner details (mapping to person). anyone that doesn't have an owner should not be listed
+23. for every car on the cars table, get the car make + the owner first name (mapping to person). anyone that doesn't have an owner should have their owner fields as null
+24. for every person on the person table, get the person's first_name and email + their car make. anyone that doesn't have a car should not be listed
