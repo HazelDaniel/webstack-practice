@@ -1,0 +1,7 @@
+./HTTP-SERVER
+./EXPRESS-PROJECT
+./PLANET-PROJECTS
+./THREADS
+./controllers
+
+**/**/node_modules
