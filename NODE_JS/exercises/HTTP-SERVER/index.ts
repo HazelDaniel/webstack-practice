@@ -74,6 +74,7 @@ const server = createServer((req, res) => {
       res.statusCode = 200;
       res.write(`<a href='http://127.0.0.1:${PORT}/friends/'>go back</a>`);
       res.write(`<pre>${JSON.stringify(friends[index])}</pre>`);
+      res.end();
     } else {
       res.statusCode = 404;
       res.end();
