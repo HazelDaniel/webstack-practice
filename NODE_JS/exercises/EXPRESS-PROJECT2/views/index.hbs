@@ -1,0 +1,45 @@
+<div class="game-board">
+  <div class="player-1-board player-highlight player--0">
+    <div class="player-name-panel">
+      <h2 class="player-1-text">{{firstPlayerName}}</h2>
+    </div>
+    <div class="counter-panel">
+      <h1 class="counter-value counter-value-0">{{firstPlayerTotalScore}}</h1>
+    </div>
+    <div class="current-score-panel current-score-panel-0">
+      <p>{{firstPlayerCurrentText}}</p>
+      <h3 class="current-value current-value-0">{{firstPlayerCurrentScore}}</h3>
+    </div>
+  </div>
+  <!--                               PLAYER 1 BOARD ENDS                               -->
+  <div class="divider-container">
+    <div class="new-game-panel">
+      <h3>🔁 {{newGameText}}</h3>
+    </div>
+    <div class="dice-pic-frame">
+      <img src="/static/IMAGES/dice-1.png" alt="dice" class="dice-pic" />
+    </div>
+    <div class="roll-panel">
+      <h3>🎲 {{diceRollCTA}}</h3>
+    </div>
+    <div class="hold-panel">
+      <h3>📤 {{diceHoldCTA}}</h3>
+    </div>
+  </div>
+  <!--                               DIVIDER CONTAINER ENDS...                              -->
+  <div class="player-2-board player--1">
+    <div class="player-name-panel">
+      <h2 class="player-2-text">{{secondPlayerName}}</h2>
+    </div>
+    <div class="counter-panel">
+      <h1 class="counter-value counter-value-1">{{secondPlayerTotalScore}}</h1>
+    </div>
+    <div class="current-score-panel current-score-panel-1">
+      <p>{{secondPlayerCurrentText}}</p>
+      <h3
+        class="current-value current-value-1"
+      >{{secondPlayerCurrentScore}}</h3>
+    </div>
+  </div>
+  <!--                               PLAYER 2 BOARD ENDS                               -->
+</div>

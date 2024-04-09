@@ -1,4 +1,3 @@
-import { IncomingMessage, ServerResponse } from "http";
 import { friends } from "../models/friends.model";
 import type { Friend, RestError } from "../types";
 import type { Request, Response } from "express";
