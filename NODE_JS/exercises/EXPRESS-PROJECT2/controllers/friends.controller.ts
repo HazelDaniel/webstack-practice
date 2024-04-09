@@ -25,7 +25,10 @@ export function createFriend(
 }
 
 export function readFriends(_: Request<null>, res: Response<Friend[]>) {
-  res.json(friends);
+  res.json(friends.map(friend => {
+    friend.messages = Array.from(new Set(friend.messages));
+    return friend;
+  }));
 }
 
 export function readFriend(

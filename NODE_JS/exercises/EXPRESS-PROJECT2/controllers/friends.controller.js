@@ -23,7 +23,10 @@ function createFriend(req, res) {
 }
 exports.createFriend = createFriend;
 function readFriends(_, res) {
-    res.json(friends_model_1.friends);
+    res.json(friends_model_1.friends.map(friend => {
+        friend.messages = Array.from(new Set(friend.messages));
+        return friend;
+    }));
 }
 exports.readFriends = readFriends;
 function readFriend(req, res) {
