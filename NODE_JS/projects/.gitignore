@@ -1,2 +1,4 @@
 NASA-PROJECT
 **/**/node_modules
+**/**.js
+NASA-PROJECT2/server/src/**/**.js
