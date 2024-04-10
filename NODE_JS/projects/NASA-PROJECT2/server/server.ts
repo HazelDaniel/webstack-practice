@@ -1,7 +1,7 @@
 import express from "express";
 import http from "http";
 import cors from "cors";
-import type { Planet } from "./types";
+import type { Planet, Launch } from "./types";
 import { createReadStream } from "fs";
 import { parse } from "csv-parse";
 import path from "path";
@@ -9,6 +9,21 @@ import path from "path";
 export const PORT = process.env.PORT || 8000;
 
 export const habitablePlanets: Planet[] = [];
+
+export const launches: Map<string | number, Launch> = new Map();
+
+export const launch: Launch = {
+  flightNumber: 100,
+  launchDate: new Date("December 20, 2024"),
+  mission: "Kepler exploration X",
+  rocket: "Explorer IS1",
+  destination: "Kepler-442 b",
+  customers: ["hazel", "SpaceX"],
+  upcoming: true,
+  success: true
+};
+
+launches.set(launch.flightNumber, launch);
 
 const isHabitable: (data: Planet) => boolean = (data) => {
   return (
@@ -60,7 +75,11 @@ const getHabitablePlanets: () => Promise<void> = () => {
 };
 
 app.get("/planets", (_, res) => {
-  res.status(200).json(habitablePlanets);
+  return res.status(200).json(habitablePlanets);
+});
+
+app.get("/launches", (_, res) => {
+  return res.status(200).json(Array.from(launches.values()));
 });
 
 const server = http.createServer(app);
@@ -80,3 +99,4 @@ async function loadServer() {
 loadServer();
 
 //TODO: install morgan middleware for logging
+//TODO: implement a data access layer

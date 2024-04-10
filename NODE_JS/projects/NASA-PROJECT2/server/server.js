@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.habitablePlanets = exports.PORT = void 0;
+exports.launch = exports.launches = exports.habitablePlanets = exports.PORT = void 0;
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
@@ -21,6 +21,18 @@ const csv_parse_1 = require("csv-parse");
 const path_1 = __importDefault(require("path"));
 exports.PORT = process.env.PORT || 8000;
 exports.habitablePlanets = [];
+exports.launches = new Map();
+exports.launch = {
+    flightNumber: 100,
+    launchDate: new Date("December 20, 2024"),
+    mission: "Kepler exploration X",
+    rocket: "Explorer IS1",
+    destination: "Kepler-442 b",
+    customers: ["hazel", "SpaceX"],
+    upcoming: true,
+    success: true
+};
+exports.launches.set(exports.launch.flightNumber, exports.launch);
 const isHabitable = (data) => {
     return (data["koi_disposition"] === "CONFIRMED" &&
         data["koi_insol"] > 0.36 &&
@@ -60,7 +72,10 @@ const getHabitablePlanets = () => {
     });
 };
 app.get("/planets", (_, res) => {
-    res.status(200).json(exports.habitablePlanets);
+    return res.status(200).json(exports.habitablePlanets);
+});
+app.get("/launches", (_, res) => {
+    return res.status(200).json(Array.from(exports.launches.values()));
 });
 const server = http_1.default.createServer(app);
 function loadServer() {
@@ -78,3 +93,4 @@ function loadServer() {
 }
 loadServer();
 //TODO: install morgan middleware for logging
+//TODO: implement a data access layer
