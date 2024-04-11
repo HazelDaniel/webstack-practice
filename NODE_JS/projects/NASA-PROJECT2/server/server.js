@@ -24,13 +24,13 @@ exports.habitablePlanets = [];
 exports.launches = new Map();
 exports.launch = {
     flightNumber: 100,
-    launchDate: new Date("December 20, 2024"),
+    launchDate: "December 20, 2024",
     mission: "Kepler exploration X",
     rocket: "Explorer IS1",
     destination: "Kepler-442 b",
     customers: ["hazel", "SpaceX"],
     upcoming: true,
-    success: true
+    success: true,
 };
 exports.launches.set(exports.launch.flightNumber, exports.launch);
 const isHabitable = (data) => {
@@ -40,6 +40,7 @@ const isHabitable = (data) => {
         data["koi_prad"] < 1.6);
 };
 const app = (0, express_1.default)();
+app.use(express_1.default.json());
 app.use((0, cors_1.default)({
     origin: "http://localhost:3000",
 }));
@@ -77,6 +78,51 @@ app.get("/planets", (_, res) => {
 app.get("/launches", (_, res) => {
     return res.status(200).json(Array.from(exports.launches.values()));
 });
+app.post("/launches", (req, res) => {
+    const inputLaunch = req.body;
+    console.log(`request received:`);
+    console.log(req);
+    if (!inputLaunch.customers ||
+        !inputLaunch.destination ||
+        !inputLaunch.launchDate ||
+        !inputLaunch.mission ||
+        !inputLaunch.rocket) {
+        let resError = {};
+        resError.error = "missing some fields";
+        return res.status(400).json(resError);
+    }
+    if (isNaN(new Date(inputLaunch.launchDate).valueOf())) {
+        let resError = {};
+        resError.error = "incorrect date format!";
+        return res.status(400).json(resError);
+    }
+    inputLaunch.launchDate = new Date(inputLaunch.launchDate).toISOString();
+    inputLaunch.upcoming =
+        new Date(inputLaunch.launchDate).getTime() > Date.now();
+    inputLaunch.success = true;
+    inputLaunch.flightNumber = exports.launches.size
+        ? Array.from(exports.launches.values())[exports.launches.size - 1].flightNumber + 1
+        : 100;
+    exports.launches.set(inputLaunch.flightNumber, inputLaunch);
+    return res.status(201).json(inputLaunch);
+});
+app.delete("/launches/:launchId", (req, res) => {
+    const launchId = +req.params.launchId;
+    if (Number.isNaN(launchId)) {
+        let resError = {};
+        resError.error = "invalid launch id!";
+        return res.status(400).json(resError);
+    }
+    if (!exports.launches.get(launchId)) {
+        let resError = {};
+        resError.error = "launch not found!";
+        return res.status(404).json(resError);
+    }
+    const resLaunch = exports.launches.get(launchId);
+    resLaunch.upcoming = false;
+    resLaunch.success = false;
+    return res.status(200).json(resLaunch);
+});
 const server = http_1.default.createServer(app);
 function loadServer() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -94,3 +140,4 @@ function loadServer() {
 loadServer();
 //TODO: install morgan middleware for logging
 //TODO: implement a data access layer
+//TODO: separation of concerns

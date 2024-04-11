@@ -16,7 +16,11 @@ export interface Launch extends LaunchRequestBody {
   customers: string[];
   upcoming: boolean;
   success: boolean;
-  launchDate: Date;
+  launchDate: string;
+}
+
+export interface ResponseErrorBody {
+  error: string;
 }
 export interface PlanetPartial extends Partial<PlanetType>{
 }

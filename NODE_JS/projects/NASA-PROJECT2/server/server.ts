@@ -1,7 +1,8 @@
 import express from "express";
 import http from "http";
 import cors from "cors";
-import type { Planet, Launch } from "./types";
+import type { Planet, Launch, ResponseErrorBody } from "./types";
+import type { Request } from "express";
 import { createReadStream } from "fs";
 import { parse } from "csv-parse";
 import path from "path";
@@ -14,13 +15,13 @@ export const launches: Map<string | number, Launch> = new Map();
 
 export const launch: Launch = {
   flightNumber: 100,
-  launchDate: new Date("December 20, 2024"),
+  launchDate: "December 20, 2024",
   mission: "Kepler exploration X",
   rocket: "Explorer IS1",
   destination: "Kepler-442 b",
   customers: ["hazel", "SpaceX"],
   upcoming: true,
-  success: true
+  success: true,
 };
 
 launches.set(launch.flightNumber, launch);
@@ -35,6 +36,7 @@ const isHabitable: (data: Planet) => boolean = (data) => {
 };
 
 const app = express();
+app.use(express.json());
 
 app.use(
   cors({
@@ -82,6 +84,63 @@ app.get("/launches", (_, res) => {
   return res.status(200).json(Array.from(launches.values()));
 });
 
+app.post("/launches", (req: Request<Launch>, res) => {
+  const inputLaunch: Launch = req.body;
+  console.log(`request received:`);
+  console.log(req);
+  if (
+    !inputLaunch.customers ||
+    !inputLaunch.destination ||
+    !inputLaunch.launchDate ||
+    !inputLaunch.mission ||
+    !inputLaunch.rocket
+  ) {
+    let resError: Partial<ResponseErrorBody> = {};
+    resError.error = "missing some fields";
+    return res.status(400).json(resError);
+  }
+
+  if (isNaN(new Date(inputLaunch.launchDate).valueOf())) {
+    let resError: Partial<ResponseErrorBody> = {};
+    resError.error = "incorrect date format!";
+    return res.status(400).json(resError);
+  }
+
+  inputLaunch.launchDate = new Date(inputLaunch.launchDate).toISOString();
+  inputLaunch.upcoming =
+    new Date(inputLaunch.launchDate).getTime() > Date.now();
+  inputLaunch.success = true;
+
+  inputLaunch.flightNumber = launches.size
+    ? Array.from(launches.values())[launches.size - 1].flightNumber + 1
+    : 100;
+
+  launches.set(inputLaunch.flightNumber, inputLaunch);
+  return res.status(201).json(inputLaunch);
+});
+
+app.delete("/launches/:launchId", (req: Request<{ launchId: string }>, res) => {
+  const launchId: number = +req.params.launchId;
+
+  if (Number.isNaN(launchId)) {
+    let resError: Partial<ResponseErrorBody> = {};
+    resError.error = "invalid launch id!";
+    return res.status(400).json(resError);
+  }
+
+  if (!launches.get(launchId)) {
+    let resError: Partial<ResponseErrorBody> = {};
+    resError.error = "launch not found!";
+    return res.status(404).json(resError);
+  }
+
+  const resLaunch = launches.get(launchId) as Launch;
+  resLaunch.upcoming = false;
+  resLaunch.success = false;
+
+  return res.status(200).json(resLaunch);
+});
+
 const server = http.createServer(app);
 
 async function loadServer() {
@@ -100,3 +159,4 @@ loadServer();
 
 //TODO: install morgan middleware for logging
 //TODO: implement a data access layer
+//TODO: separation of concerns
