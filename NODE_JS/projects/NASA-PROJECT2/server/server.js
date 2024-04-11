@@ -18,6 +18,7 @@ const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = require("fs");
 const csv_parse_1 = require("csv-parse");
+const morgan_1 = __importDefault(require("morgan"));
 const path_1 = __importDefault(require("path"));
 exports.PORT = process.env.PORT || 8000;
 exports.habitablePlanets = [];
@@ -45,6 +46,7 @@ app.use((0, cors_1.default)({
     origin: "http://localhost:3000",
 }));
 // app.use(cors());
+app.use((0, morgan_1.default)("combined"));
 const getHabitablePlanets = () => {
     return new Promise((resolve, reject) => {
         try {
@@ -58,20 +60,21 @@ const getHabitablePlanets = () => {
                 }
             })
                 .on("error", (err) => {
-                console.log("error parsing csv from stream");
+                // console.log("error parsing csv from stream");
                 reject(err);
             })
                 .on("end", () => {
-                console.log(`${exports.habitablePlanets.length} planets found!`);
+                // console.log(`${habitablePlanets.length} planets found!`);
                 resolve();
             }));
         }
         catch (error) {
-            console.error(`OPEN FILE ERROR: ${error}`);
+            // console.error(`OPEN FILE ERROR: ${error}`);
             reject(error);
         }
     });
 };
+app.use(express_1.default.static(path_1.default.join(__dirname, "public")));
 app.get("/planets", (_, res) => {
     return res.status(200).json(exports.habitablePlanets);
 });
@@ -80,10 +83,7 @@ app.get("/launches", (_, res) => {
 });
 app.post("/launches", (req, res) => {
     const inputLaunch = req.body;
-    console.log(`request received:`);
-    console.log(req);
-    if (!inputLaunch.customers ||
-        !inputLaunch.destination ||
+    if (!inputLaunch.destination ||
         !inputLaunch.launchDate ||
         !inputLaunch.mission ||
         !inputLaunch.rocket) {
@@ -95,6 +95,13 @@ app.post("/launches", (req, res) => {
         let resError = {};
         resError.error = "incorrect date format!";
         return res.status(400).json(resError);
+    }
+    const fixedCustomers = ["Blue Origin", "SpaceX"];
+    if (inputLaunch.customers) {
+        inputLaunch.customers = [...inputLaunch.customers, ...fixedCustomers];
+    }
+    else {
+        inputLaunch.customers = fixedCustomers;
     }
     inputLaunch.launchDate = new Date(inputLaunch.launchDate).toISOString();
     inputLaunch.upcoming =
@@ -122,6 +129,9 @@ app.delete("/launches/:launchId", (req, res) => {
     resLaunch.upcoming = false;
     resLaunch.success = false;
     return res.status(200).json(resLaunch);
+});
+app.get("/*", (_, res) => {
+    res.sendFile(path_1.default.join(__dirname, "public", "index.html"));
 });
 const server = http_1.default.createServer(app);
 function loadServer() {

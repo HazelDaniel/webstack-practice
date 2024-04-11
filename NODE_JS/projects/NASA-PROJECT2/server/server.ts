@@ -5,6 +5,7 @@ import type { Planet, Launch, ResponseErrorBody } from "./types";
 import type { Request } from "express";
 import { createReadStream } from "fs";
 import { parse } from "csv-parse";
+import morgan from "morgan";
 import path from "path";
 
 export const PORT = process.env.PORT || 8000;
@@ -44,6 +45,7 @@ app.use(
   })
 );
 // app.use(cors());
+app.use(morgan("combined"));
 
 const getHabitablePlanets: () => Promise<void> = () => {
   return new Promise((resolve, reject) => {
@@ -61,20 +63,23 @@ const getHabitablePlanets: () => Promise<void> = () => {
             }
           })
           .on("error", (err) => {
-            console.log("error parsing csv from stream");
+            // console.log("error parsing csv from stream");
             reject(err);
           })
           .on("end", () => {
-            console.log(`${habitablePlanets.length} planets found!`);
+            // console.log(`${habitablePlanets.length} planets found!`);
             resolve();
           })
       );
     } catch (error) {
-      console.error(`OPEN FILE ERROR: ${error}`);
+      // console.error(`OPEN FILE ERROR: ${error}`);
       reject(error);
     }
   });
 };
+
+app.use(express.static(path.join(__dirname, "public")));
+
 
 app.get("/planets", (_, res) => {
   return res.status(200).json(habitablePlanets);
@@ -86,10 +91,7 @@ app.get("/launches", (_, res) => {
 
 app.post("/launches", (req: Request<Launch>, res) => {
   const inputLaunch: Launch = req.body;
-  console.log(`request received:`);
-  console.log(req);
   if (
-    !inputLaunch.customers ||
     !inputLaunch.destination ||
     !inputLaunch.launchDate ||
     !inputLaunch.mission ||
@@ -106,6 +108,13 @@ app.post("/launches", (req: Request<Launch>, res) => {
     return res.status(400).json(resError);
   }
 
+  const fixedCustomers = ["Blue Origin", "SpaceX"];
+
+  if (inputLaunch.customers) {
+    inputLaunch.customers = [...inputLaunch.customers, ...fixedCustomers];
+  } else {
+    inputLaunch.customers = fixedCustomers;
+  }
   inputLaunch.launchDate = new Date(inputLaunch.launchDate).toISOString();
   inputLaunch.upcoming =
     new Date(inputLaunch.launchDate).getTime() > Date.now();
@@ -139,6 +148,10 @@ app.delete("/launches/:launchId", (req: Request<{ launchId: string }>, res) => {
   resLaunch.success = false;
 
   return res.status(200).json(resLaunch);
+});
+
+app.get("/*", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const server = http.createServer(app);

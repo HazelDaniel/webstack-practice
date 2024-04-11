@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "PORT=5500 nodemon server.js",
+    "start": "PORT=5500 node server.js",
     "test": "jest --watch --all",
     "watch": "PORT=5500 nodemon server.js",
     "cluster": "pm2 start src/server.js -i max"
@@ -24,6 +24,7 @@
     "passport": "^0.6.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17"
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9"
   }
 }
