@@ -1,5 +1,5 @@
 import { createServer } from "http";
-import { friends } from "./data";
+import { friends } from "./data.js";
 const PORT = process.env.PORT || 5000;
 function validateEndpoint(req, res, endpoint, statusOptions) {
     var _a;
