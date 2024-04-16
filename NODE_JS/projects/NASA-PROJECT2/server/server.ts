@@ -9,8 +9,7 @@ import { PlanetsRouter } from "./src/controllers/routes/planets.route";
 
 export const PORT = process.env.PORT || 8000;
 
-const app = express();
-
+export const app = express();
 
 app.use(
   cors({
@@ -47,3 +46,7 @@ loadServer();
 
 //TODO: implement a data access layer
 //TODO: separation of concerns
+
+module.exports = {
+  app,
+};
