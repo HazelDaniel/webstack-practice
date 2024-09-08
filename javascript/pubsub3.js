@@ -6,13 +6,13 @@ class cacheClass {
   }
 
   evict(key) {
-    console.log("try evicting key ", key, " ...");
+    // console.log("\t>evicting key ", key, " ...");
     if (!this.data.has(key)) return;
     this.data.delete(key);
   }
 
   set(key, value) {
-    console.log("setting key", key, " as: ", value, " ...");
+    // console.log("setting key", key, " as: ", value, " ...");
     this.data.set(key, value);
   }
 
@@ -21,7 +21,7 @@ class cacheClass {
   }
 }
 
-class RoutePubsubCache {
+export class RoutePubsubCache {
   constructor(opts) {
     this.subscribers = new Map();
     this.groupSubscribers = new Map();
@@ -69,64 +69,62 @@ class RoutePubsubCache {
     this.groupSubscribers.get(eventGroup).add(callback);
   }
 
+  handleLonePublisher(event) {
+    // nobody subscribed to me explicitly but i am broadcasted nonetheless and i might match a group
+    if (!this.isGenericRoute(event)) {
+      // i am just a literal route
+      let matchingParentEvents = [...this.groupSubscribers.keys()].filter(
+        (e) => {
+          const isMatch = dynamicMatch(event, e, this.groupDelimiter);
+          return isMatch;
+        }
+      );
+      const eventParentTreeMemo = new Set();
+      for (const parentEvent of matchingParentEvents) {
+        const matchingChildrenEvents2 = [...this.subscribers.entries()].filter(
+          ([r, _2]) => {
+            return dynamicMatch(r, parentEvent, this.groupDelimiter);
+          }
+        );
+
+        if (matchingChildrenEvents2.length === 0) {
+          [...this.groupSubscribers.get(parentEvent)].forEach((subscriber) => {
+            subscriber({
+              cache: this.cache,
+              routeKeys: [parentEvent, event],
+            });
+          });
+        }
+
+        for (const [route, subscriberList] of matchingChildrenEvents2) {
+          if (!eventParentTreeMemo.has(route)) {
+            subscriberList.forEach((subscriber) => {
+              subscriber({
+                cache: this.cache,
+                routeKeys: eventParentTreeMemo.has(event)
+                  ? [route]
+                  : [route, event],
+              });
+            });
+          }
+          eventParentTreeMemo.add(event);
+          eventParentTreeMemo.add(route);
+        }
+      }
+
+    } else {
+      // i am a pattern
+    }
+    return;
+  }
+
   callback(subscriber, event) {
     const ownerSet = this.groupContext.get(subscriber);
     let owner = undefined;
     if (ownerSet && ownerSet.size) [owner] = [...ownerSet];
 
     if (!this.subscribers.has(event) && !this.groupSubscribers.has(event)) {
-      // nobody subscribed to me explicitly but i am broadcasted nonetheless and i might match a group
-      if (!this.isGenericRoute(event)) {
-        // i am just a literal route
-        let matchingParentEvents = [...this.groupSubscribers.keys()].filter(
-          (e) => {
-            const isMatch = dynamicMatch(event, e, this.groupDelimiter);
-            return isMatch;
-          }
-        );
-        const eventParentTreeMemo = new Set();
-        for (const parentEvent of matchingParentEvents) {
-          const matchingChildrenEvents2 = [
-            ...this.subscribers.entries(),
-          ].filter(([r, _2]) => {
-            return dynamicMatch(r, parentEvent, this.groupDelimiter);
-          });
-
-          if (matchingChildrenEvents2.length === 0) {
-            [...this.groupSubscribers.get(parentEvent)].forEach(
-              (subscriber) => {
-                subscriber({
-                  cache: this.cache,
-                  routeKeys: [parentEvent, event],
-                });
-              }
-            );
-          }
-
-          for (const [route, subscriberList] of matchingChildrenEvents2) {
-            // console.log("matching parent events are : ");
-            // console.table(matchingParentEvents);
-            // console.log("event tree memo is ", eventParentTreeMemo);
-            if (!eventParentTreeMemo.has(route)) {
-              subscriberList.forEach((subscriber) => {
-                subscriber({
-                  cache: this.cache,
-                  routeKeys: eventParentTreeMemo.has(event)
-                    ? [route]
-                    : [route, event],
-                });
-              });
-            }
-            eventParentTreeMemo.add(event);
-            eventParentTreeMemo.add(route);
-          }
-        }
-
-        // console.log("here are my parents: ");
-        // console.table(matchingParentEvents);
-      } else {
-        // i am a pattern
-      }
+      this.handleLonePublisher(event);
       return;
     }
 
@@ -137,7 +135,6 @@ class RoutePubsubCache {
       });
       return;
     }
-    console.log("\t[group]: ", owner);
     let matchingChildrenEvents = [...this.subscribers.keys()].filter((e) => {
       const isMatch = dynamicMatch(e, owner, this.groupDelimiter);
       return isMatch && e === event;
@@ -157,29 +154,30 @@ class RoutePubsubCache {
     const netSubscribersMap = new Map();
 
     if (this.subscribers.has(event)) {
-      Array.from(this.subscribers.get(event)).forEach((subscriber) => {
+      [...this.subscribers.get(event)].forEach((subscriber) => {
         netSubscribers.push(subscriber);
       });
     }
-    Array.from(this.groupSubscribers.keys()).forEach((key) => {
-      const resitems = this.groupSubscribers.get(key);
-      if (
-        dynamicMatch(event, key, this.groupDelimiter) &&
-        key !== this.globCharacter
-      ) {
-        Array.from(resitems).forEach((item) => {
-          if (!netSubscribersMap.has(item)) {
-            netSubscribers.push(item);
-            netSubscribersMap.set(item, 1);
-          }
-        });
+    [...this.groupSubscribers.entries()].forEach(
+      ([key, matchingSubscribers]) => {
+        if (
+          dynamicMatch(event, key, this.groupDelimiter) &&
+          key !== this.globCharacter
+        ) {
+          [...matchingSubscribers].forEach((item) => {
+            if (!netSubscribersMap.has(item)) {
+              netSubscribers.push(item);
+              netSubscribersMap.set(item, 1);
+            }
+          });
+        }
       }
-    });
+    );
 
     const globsubs = this.groupSubscribers.get(this.globCharacter);
 
     if (!!globsubs) {
-      Array.from(globsubs).forEach((subscriber) => {
+      [...globsubs].forEach((subscriber) => {
         if (!netSubscribersMap.has(subscriber)) {
           netSubscribers.push(subscriber);
           netSubscribersMap.set(subscriber, 1);
@@ -194,15 +192,13 @@ class RoutePubsubCache {
       console.warn(`event: ${event} has no subscribers attached to it`);
       return;
     }
-    // console.log("net subscribers are ", netSubscribers);
-    // console.log("net subscribers map keys are ", [...netSubscribersMap.keys()]);
 
     netSubscribers.forEach((subscriber) => {
       this.callback(subscriber, event);
     });
   }
 
-  write(url) {
+  broadcast(url) {
     this.publish(url);
   }
 
@@ -211,19 +207,20 @@ class RoutePubsubCache {
   }
 
   async read(url) {
-    let data = this.cache.get(url);
-    if (!data) {
-      await wait(0.3);
-      data = "fresh data";
-      this.writeCache(url, data);
-      return data;
+    let data;
+    if (this.cache.get(url)) {
+      return "cached data";
     }
+    await wait(0.3);
+    data = "fresh data";
+    this.writeCache(url, data);
+    return data;
   }
 }
 
 const Routeschannel = new RoutePubsubCache({ delimiter: "/" });
 
-class GlobalRouteCache {
+export class GlobalRouteCache {
   static delimiter = "/";
   static channel = new RoutePubsubCache({ delimiter: this.delimiter });
 
@@ -238,21 +235,21 @@ class GlobalRouteCache {
     //route implementation
 
     //middleware implementation
-    this.channel.write(url);
+    this.channel.broadcast(url);
   }
 
-  static put(url, data) {
+  static put(url) {
     //route implementation
 
     //middleware implementation
-    this.channel.write(url, data);
+    this.channel.broadcast(url);
   }
 
   static delete(url) {
     //route implementation
 
     //middleware implementation
-    this.channel.write(url, "");
+    this.channel.broadcast(url);
   }
 
   static async get(url) {
@@ -284,19 +281,23 @@ class GlobalRouteCache {
   }
 }
 
-await GlobalRouteCache.get("/users/:user_id");
+// await GlobalRouteCache.get("/users/:user_id");
+// await GlobalRouteCache.get("/users/*/200");
 
-// GlobalRouteCache.get("/users/123");
-await GlobalRouteCache.get("/users/123/*");
-await GlobalRouteCache.get("/users/123/news/:news_id");
-await GlobalRouteCache.get("/users/123/news/200");
+// await GlobalRouteCache.get("/users/123");
+// await GlobalRouteCache.get("/users/123/*");
+// await GlobalRouteCache.get("/users/123/news/:news_id");
+// await GlobalRouteCache.get("/users/123/news/200");
 
-await GlobalRouteCache.get("/users/123/news");
-await GlobalRouteCache.get("/users/123/news/*");
+// await GlobalRouteCache.get("/users/123/news");
+// await GlobalRouteCache.get("/users/123/news");
+// await GlobalRouteCache.get("/users/123/news/*");
 
-GlobalRouteCache.post("/users/123");
-console.log("------------------------------");
-GlobalRouteCache.post("/users/123/news"); //:BUGFIX: later, on here
+// GlobalRouteCache.post("/users/4/news/5");
+// GlobalRouteCache.post("/users/123");
+// // GlobalRouteCache.post("/creators/123");
+// console.log("------------------------------");
+// GlobalRouteCache.post("/users/123/news"); //:BUGFIX: later, on here
 
-console.log("++++++++++++++++++++++++++++++");
-console.log(GlobalRouteCache.channel.cache);
+// console.log("++++++++++++++++++++++++++++++");
+// console.log(GlobalRouteCache.channel.cache);
