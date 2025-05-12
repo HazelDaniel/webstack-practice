@@ -1,6 +1,8 @@
 /**
  * opts :
  */
+
+
 export const dynamicReplace = (inputString, opts) => {
   const optsKeyQueue = Object.keys(opts);
   const optsValueQueue = Object.values(opts);
@@ -81,18 +83,6 @@ export const dynamicMatch = (
       break;
     }
   }
-  // console.log(
-  //   "\ninput string ",
-  //   inputString,
-  //   "\t",
-  //   "group ",
-  //   pattern,
-  //   "\t",
-  //   " matchCount ",
-  //   matchCount,
-  //   " chunk length ",
-  //   inputChunk.length
-  // );
   return matchCount === inputChunk.length - 1;
 };
 
